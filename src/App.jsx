@@ -1,5 +1,5 @@
 import "bootstrap/dist/css/bootstrap.min.css";
-import { Card, CardBody, Col, Container, Row } from "react-bootstrap";
+import { Card, CardBody, Col, Container, Row, Stack } from "react-bootstrap";
 import ComponentOptions from "./components/ComponentOptions";
 import AsideContent from "./components/AsideContent";
 import {
@@ -14,6 +14,8 @@ import DataContent from "./components/DataContent";
 import Image from "./components/Image";
 import Chat from "./components/Chat";
 import { SortableContext, arrayMove } from "@dnd-kit/sortable";
+import ContextProvider from "./context/ContextProvider";
+import AppActionButtons from "./components/AppActionButtons";
 
 function App() {
   const [componentOrder, setComponentOrder] = useState([
@@ -22,27 +24,8 @@ function App() {
     "chat-content",
   ]);
   const [components, setComponents] = useState([null, null, null]);
-  const [selectedComponent, setSelectedComponent] = useState(null);
-  const [isActiveId, setIsActiveId] = useState("");
-  const [image, setImage] = useState("");
-
-  const handleImage = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setImage(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleDragStart = (event) => {
-    setIsActiveId(event.active.id);
-  };
 
   const handleDragEnd = (event) => {
-    setIsActiveId("");
     const { active, over } = event;
 
     if (active.id !== over.id) {
@@ -68,7 +51,7 @@ function App() {
         case "data-content":
           return <DataContent />;
         case "image-content":
-          return <Image image={image} handleImage={handleImage} />;
+          return <Image />;
         case "chat-content":
           return <Chat />;
         default:
@@ -76,39 +59,49 @@ function App() {
       }
     });
     setComponents(_components);
-  }, [componentOrder, image]);
+  }, [componentOrder]);
 
   return (
-    <div className="p-3" style={{ height: "100dvh", maxHeight: "100vh" }}>
-      <Card className="py-2 bg-light w-100" style={{ height: "100%" }}>
-        <CardBody>
-          <Container fluid style={{ height: "100%" }}>
-            <Row className="gx-0" style={{ height: "100%" }}>
-              <Col xs={2}>
-                <ComponentOptions />
-              </Col>
-              <DndContext
-                sensors={sensors}
-                onDragStart={handleDragStart}
-                onDragEnd={handleDragEnd}
-              >
-                <SortableContext items={componentOrder}>
-                  <Col xs={6}>
-                    <MainContainer component={components[0]} />
-                  </Col>
-                  <Col xs={4}>
-                    <AsideContent
-                      topComponent={components[1]}
-                      bottomComponent={components[2]}
-                    />
-                  </Col>
-                </SortableContext>
-              </DndContext>
-            </Row>
-          </Container>
-        </CardBody>
-      </Card>
-    </div>
+    <ContextProvider>
+      <Stack
+        direction="vertical"
+        gap={2}
+        className="align-items-end p-3"
+        style={{ height: "100dvh", maxHeight: "100vh" }}
+      >
+        <Card className="py-2 bg-light w-100" style={{ height: "100%" }}>
+          <CardBody>
+            <Container fluid style={{ height: "100%" }}>
+              <Row className="gx-0" style={{ height: "100%" }}>
+                <Col xs={2}>
+                  <Stack
+                    direction="vertical"
+                    gap={2}
+                    className="h-100 border rounded bg-white p-2"
+                  >
+                    <ComponentOptions />
+                    <AppActionButtons />
+                  </Stack>
+                </Col>
+                <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+                  <SortableContext items={componentOrder}>
+                    <Col xs={6}>
+                      <MainContainer component={components[0]} />
+                    </Col>
+                    <Col xs={4} className="h-100">
+                      <AsideContent
+                        topComponent={components[1]}
+                        bottomComponent={components[2]}
+                      />
+                    </Col>
+                  </SortableContext>
+                </DndContext>
+              </Row>
+            </Container>
+          </CardBody>
+        </Card>
+      </Stack>
+    </ContextProvider>
   );
 }
 

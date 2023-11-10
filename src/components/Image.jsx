@@ -1,15 +1,17 @@
-import PropTypes from "prop-types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useRef } from "react";
+import { useContext } from "react";
 import { Camera } from "react-bootstrap-icons";
+import { AppContext } from "../context/ContextProvider";
 
-function Image({ image, handleImage }) {
-  const imageRef = useRef(null);
+function Image() {
+  const { images, setSelectedComponent } = useContext(AppContext);
+  const { isDnDDisabled } = useContext(AppContext);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
       id: "image-content",
+      disabled: isDnDDisabled,
     });
   const style = transform
     ? {
@@ -21,49 +23,42 @@ function Image({ image, handleImage }) {
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{ ...style, overflowY: "auto" }}
       {...listeners}
       {...attributes}
-      className="h-100 d-flex align-items-center justify-content-center bg-white"
+      className="h-100 bg-white"
+      onClick={() => setSelectedComponent("image-content")}
     >
-      {image ? (
-        <img
-          src={image}
+      {images.length ? (
+        <div
+          className="d-flex flex-row flex-wrap gap-2 overflow-y-auto h-100"
           style={{
-            height: "auto",
-            width: "100%",
-            objectFit: "contain",
             maxHeight: "85vh",
           }}
-          alt="image"
-          onClick={() => {
-            imageRef.current.click();
-          }}
-        />
+        >
+          {images.map((image, index) => (
+            <div className="flex-grow-1" key={index}>
+              <img
+                src={
+                  typeof image === "string" ? image : URL.createObjectURL(image)
+                }
+                className="object-fit-contain rounded p-1"
+                style={{
+                  height: "auto",
+                  width: "100%",
+                }}
+                alt="image"
+              />
+            </div>
+          ))}
+        </div>
       ) : (
-        <Camera
-          size={50}
-          onClick={() => {
-            imageRef.current.click();
-          }}
-        />
+        <div className="h-100 d-flex justify-content-center align-items-center">
+          <Camera size={50} />
+        </div>
       )}
-      <input
-        type="file"
-        ref={imageRef}
-        style={{ display: "none" }}
-        id="update-product-image"
-        hidden
-        accept="image/x-png,image/png,image/jpeg,image/jpg"
-        onChange={handleImage}
-      />
     </div>
   );
 }
-
-Image.propTypes = {
-  handleImage: PropTypes.func,
-  image: PropTypes.any,
-};
 
 export default Image;

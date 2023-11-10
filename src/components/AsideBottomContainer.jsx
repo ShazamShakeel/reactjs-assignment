@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 
 function AsideBottomContainer({ component }) {
   return (
-    <div className="border rounded h-50" style={{ maxHeight: "45vh" }}>
+    <div className="border rounded h-100" style={{ maxHeight: "42vh" }}>
       {component}
     </div>
   );

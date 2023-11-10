@@ -5,10 +5,10 @@ import AsideBottomContainer from "./AsideBottomContainer";
 
 function AsideContent({ topComponent, bottomComponent }) {
   return (
-    <Stack className="h-100 gap-3">
+    <div className="h-100 d-flex flex-column justify-content-between">
       <AsideTopContainer component={topComponent} />
       <AsideBottomContainer component={bottomComponent} />
-    </Stack>
+    </div>
   );
 }
 
