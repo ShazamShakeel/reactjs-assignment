@@ -4,8 +4,16 @@ import { useContext } from "react";
 import { AppContext } from "../context/ContextProvider";
 
 function DataContent() {
-  const { isDnDDisabled, setSelectedComponent, fontColor } =
-    useContext(AppContext);
+  const {
+    textData,
+    isEditText,
+    editedText,
+    setEditedText,
+    isDnDDisabled,
+    setSelectedComponent,
+    fontColor,
+    fontSize,
+  } = useContext(AppContext);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
     useSortable({
@@ -26,7 +34,8 @@ function DataContent() {
         ...style,
         overflowY: "auto",
         maxHeight: "85vh",
-        color: fontColor,
+        color: isEditText ? "#000" : fontColor,
+        fontSize: isEditText ? "1rem" : `${fontSize}px`,
       }}
       {...listeners}
       {...attributes}
@@ -35,49 +44,43 @@ function DataContent() {
         setSelectedComponent("data-content");
       }}
     >
-      <h1>Data Heading</h1>
-      <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi, numquam
-        in suscipit aperiam commodi vero laboriosam voluptatum libero minus a.
-        Eligendi ipsum suscipit temporibus quia expedita fugit tempora non
-        laboriosam.
-      </p>
-      <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi, numquam
-        in suscipit aperiam commodi vero laboriosam voluptatum libero minus a.
-        Eligendi ipsum suscipit temporibus quia expedita fugit tempora non
-        laboriosam.
-      </p>
-      <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi, numquam
-        in suscipit aperiam commodi vero laboriosam voluptatum libero minus a.
-        Eligendi ipsum suscipit temporibus quia expedita fugit tempora non
-        laboriosam.
-      </p>
-      <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi, numquam
-        in suscipit aperiam commodi vero laboriosam voluptatum libero minus a.
-        Eligendi ipsum suscipit temporibus quia expedita fugit tempora non
-        laboriosam.
-      </p>
-      <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi, numquam
-        in suscipit aperiam commodi vero laboriosam voluptatum libero minus a.
-        Eligendi ipsum suscipit temporibus quia expedita fugit tempora non
-        laboriosam.
-      </p>
-      <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi, numquam
-        in suscipit aperiam commodi vero laboriosam voluptatum libero minus a.
-        Eligendi ipsum suscipit temporibus quia expedita fugit tempora non
-        laboriosam.
-      </p>
-      <p>
-        Lorem ipsum dolor sit amet consectetur adipisicing elit. Nisi, numquam
-        in suscipit aperiam commodi vero laboriosam voluptatum libero minus a.
-        Eligendi ipsum suscipit temporibus quia expedita fugit tempora non
-        laboriosam.
-      </p>
+      {isEditText ? (
+        <div className="d-flex flex-column gap-2 w-100 h-100">
+          <div>
+            <p className="fw-bold">Heading</p>
+            <textarea
+              value={editedText?.heading ?? ""}
+              onChange={(e) => {
+                setEditedText({
+                  heading: e.target.value,
+                  paragraph: editedText?.paragraph,
+                });
+              }}
+              className="w-100"
+              style={{ resize: "none" }}
+            />
+          </div>
+          <div className="w-100 h-auto">
+            <p className="fw-bold">Paragraph</p>
+            <textarea
+              value={editedText?.paragraph ?? ""}
+              onChange={(e) => {
+                setEditedText({
+                  heading: editedText?.heading,
+                  paragraph: e.target.value,
+                });
+              }}
+              className="w-100 h-100"
+              style={{ resize: "none" }}
+            />
+          </div>
+        </div>
+      ) : (
+        <>
+          <h1 style={{ fontSize: "1.5em" }}>{textData?.heading ?? ""}</h1>
+          <p style={{ fontSize: "1em" }}>{textData?.paragraph ?? ""}</p>
+        </>
+      )}
     </div>
   );
 }

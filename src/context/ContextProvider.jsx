@@ -1,11 +1,26 @@
 import PropTypes from "prop-types";
-import { createContext, useState } from "react";
+import { createContext, useCallback, useEffect, useState } from "react";
+import { db } from "../config/firebase";
+import { collection, doc, getDocs, updateDoc } from "firebase/firestore";
 
 export const AppContext = createContext();
 
 function ContextProvider({ children }) {
+  const textDataCollectionRef = collection(db, "textdata");
+
   const [isDnDDisabled, setIsDnDDisabled] = useState(false);
   const [images, setImages] = useState([]);
+  const [textData, setTextData] = useState({
+    id: "",
+    heading: "",
+    paragraph: "",
+  });
+  const [isEditText, setIsEditText] = useState(false);
+  const [editedText, setEditedText] = useState({
+    heading: "",
+    paragraph: "",
+  });
+  const [fontSize, setFontSize] = useState(16);
   const [fontColor, setFontColor] = useState("#000000");
   const [selectedComponent, setSelectedComponent] = useState(null);
   const [messages, setMessages] = useState([
@@ -36,6 +51,60 @@ function ContextProvider({ children }) {
       ]);
   };
 
+  const getTextData = useCallback(async () => {
+    try {
+      const data = await getDocs(textDataCollectionRef);
+      const filteredData = data.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id,
+      }));
+      setTextData(filteredData[0]);
+    } catch (err) {
+      console.error(err);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const updateTextData = useCallback(async () => {
+    try {
+      const document = doc(db, "textdata", textData?.id);
+      await updateDoc(document, {
+        heading: editedText?.heading,
+        paragraph: editedText?.paragraph,
+      });
+      setTextData({
+        ...textData,
+        heading: editedText?.heading,
+        paragraph: editedText?.paragraph,
+      });
+      handleIsEditText(false);
+    } catch (err) {
+      console.error(err);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editedText, textData]);
+
+  const handleIsEditText = (value) => {
+    setIsEditText(value);
+    if (!value) {
+      setEditedText({
+        heading: textData?.heading ?? "",
+        paragraph: textData?.paragraph ?? "",
+      });
+    }
+  };
+
+  useEffect(() => {
+    setEditedText({
+      heading: textData?.heading ?? "",
+      paragraph: textData?.paragraph ?? "",
+    });
+  }, [textData]);
+
+  useEffect(() => {
+    getTextData();
+  }, [getTextData]);
+
   return (
     <AppContext.Provider
       value={{
@@ -50,6 +119,15 @@ function ContextProvider({ children }) {
         addMessage,
         fontColor,
         setFontColor,
+        textData,
+        isEditText,
+        setIsEditText,
+        editedText,
+        setEditedText,
+        handleIsEditText,
+        updateTextData,
+        fontSize,
+        setFontSize,
       }}
     >
       {children}

@@ -20,7 +20,15 @@ function ComponentOptions() {
 export default ComponentOptions;
 
 function DataContentOptions() {
-  const { fontColor, setFontColor } = useContext(AppContext);
+  const {
+    isEditText,
+    handleIsEditText,
+    updateTextData,
+    fontColor,
+    setFontColor,
+    fontSize,
+    setFontSize,
+  } = useContext(AppContext);
   const [showColorSelector, setShowColorSelector] = useState(false);
   const handleColorChange = (value) => {
     setFontColor(value?.hex);
@@ -40,31 +48,75 @@ function DataContentOptions() {
 
   return (
     <>
-      <Button variant="outline-secondary" disabled>
-        Increase Font Size
-      </Button>
-      <Button variant="outline-secondary" disabled>
-        Decrease Font Size
-      </Button>
-      <Button
-        variant="outline-secondary"
-        onClick={() => {
-          setShowColorSelector(true);
-        }}
-      >
-        Change Font Color
-      </Button>
-
-      {showColorSelector && (
-        <div style={popover}>
-          <div
-            style={cover}
+      {!isEditText && (
+        <>
+          <Button
+            variant="outline-secondary"
             onClick={() => {
-              setShowColorSelector(false);
+              setFontSize(fontSize + 1);
             }}
-          />
-          <ChromePicker color={fontColor} onChange={handleColorChange} />
-        </div>
+            disabled={fontSize === 28}
+          >
+            Increase Font Size
+          </Button>
+          <Button
+            variant="outline-secondary"
+            onClick={() => {
+              setFontSize(fontSize - 1);
+            }}
+            disabled={fontSize === 8}
+          >
+            Decrease Font Size
+          </Button>
+          <Button
+            variant="outline-secondary"
+            onClick={() => {
+              setShowColorSelector(true);
+            }}
+          >
+            Change Font Color
+          </Button>
+
+          {showColorSelector && (
+            <div style={popover}>
+              <div
+                style={cover}
+                onClick={() => {
+                  setShowColorSelector(false);
+                }}
+              />
+              <ChromePicker color={fontColor} onChange={handleColorChange} />
+            </div>
+          )}
+          <Button
+            variant="outline-secondary"
+            onClick={() => {
+              handleIsEditText(true);
+            }}
+          >
+            Edit Text
+          </Button>
+        </>
+      )}
+      {isEditText && (
+        <>
+          <Button
+            variant="outline-secondary"
+            onClick={() => {
+              updateTextData();
+            }}
+          >
+            Save Text
+          </Button>
+          <Button
+            variant="outline-secondary"
+            onClick={() => {
+              handleIsEditText(false);
+            }}
+          >
+            Cancel
+          </Button>
+        </>
       )}
     </>
   );

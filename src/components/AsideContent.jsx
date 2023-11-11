@@ -1,5 +1,4 @@
 import PropTypes from "prop-types";
-import { Stack } from "react-bootstrap";
 import AsideTopContainer from "./AsideTopContainer";
 import AsideBottomContainer from "./AsideBottomContainer";
 
