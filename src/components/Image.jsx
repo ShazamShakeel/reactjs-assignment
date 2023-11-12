@@ -3,9 +3,11 @@ import { CSS } from "@dnd-kit/utilities";
 import { useContext } from "react";
 import { Camera } from "react-bootstrap-icons";
 import { AppContext } from "../context/ContextProvider";
+import { Spinner } from "react-bootstrap";
 
 function Image() {
-  const { images, setSelectedComponent } = useContext(AppContext);
+  const { images, isImageLoading, setSelectedComponent } =
+    useContext(AppContext);
   const { isDnDDisabled } = useContext(AppContext);
 
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -19,6 +21,15 @@ function Image() {
         transition,
       }
     : undefined;
+
+  if (isImageLoading)
+    return (
+      <div className="h-100 d-flex justify-content-center align-items-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Uploading...</span>
+        </Spinner>
+      </div>
+    );
 
   return (
     <div

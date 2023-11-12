@@ -1,15 +1,22 @@
 import PropTypes from "prop-types";
 import { createContext, useCallback, useEffect, useState } from "react";
-import { db } from "../config/firebase";
+import { db, storage } from "../config/firebase";
 import { collection, doc, getDocs, updateDoc } from "firebase/firestore";
+import {
+  deleteObject,
+  getDownloadURL,
+  listAll,
+  ref,
+  uploadBytes,
+} from "firebase/storage";
+import { v4 } from "uuid";
 
 export const AppContext = createContext();
 
 function ContextProvider({ children }) {
-  const textDataCollectionRef = collection(db, "textdata");
-
   const [isDnDDisabled, setIsDnDDisabled] = useState(false);
   const [images, setImages] = useState([]);
+  const [isImageLoading, setIsImageLoading] = useState(true);
   const [textData, setTextData] = useState({
     id: "",
     heading: "",
@@ -28,20 +35,61 @@ function ContextProvider({ children }) {
     { id: 1, message: "How are you?", sender: "bot" },
   ]);
 
-  const addImage = (e) => {
-    const image = e.target.files[0];
-    if (image && images.length < 4) {
-      setImages([...images, image]);
-    } else if (images.length === 4) {
-      e.target.value = "";
-      alert("You can only add 4 images");
+  const getImages = useCallback(async () => {
+    try {
+      setIsImageLoading(true);
+      const data = await listAll(ref(storage, "/"));
+      const promises = data.items.map((item) => getDownloadURL(item));
+      const urls = await Promise.all(promises);
+      console.log(urls);
+      setImages(urls);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsImageLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const uploadImage = useCallback(
+    async (image) => {
+      if (!image) return;
+      try {
+        setIsImageLoading(true);
+        const storageRef = ref(storage, `${image.name + v4(0)}`);
+        const snapshot = await uploadBytes(storageRef, image);
+        const url = await getDownloadURL(snapshot.ref);
+        setImages([...images, url]);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setIsImageLoading(false);
+      }
+    },
+    [images]
+  );
+
+  const addImage = (e) => {
+    if (images.length >= 4) {
+      e.target.value = "";
+      return alert("You can only add 4 images");
+    }
+    const image = e.target.files[0];
+    uploadImage(image);
+    e.target.value = "";
   };
 
-  const removeImage = () => {
-    //it will remove the last image
-    images?.length && setImages(images.slice(0, images.length - 1));
-  };
+  const removeImage = useCallback(async () => {
+    //it will remove the last image using firebase storage
+    const lastImage = images[images.length - 1];
+    const storageRef = ref(storage, lastImage);
+    try {
+      await deleteObject(storageRef);
+      setImages(images.slice(0, images.length - 1));
+    } catch (err) {
+      console.error(err);
+    }
+  }, [images]);
 
   const addMessage = (message) => {
     if (message)
@@ -53,6 +101,7 @@ function ContextProvider({ children }) {
 
   const getTextData = useCallback(async () => {
     try {
+      const textDataCollectionRef = collection(db, "textdata");
       const data = await getDocs(textDataCollectionRef);
       const filteredData = data.docs.map((doc) => ({
         ...doc.data(),
@@ -105,6 +154,11 @@ function ContextProvider({ children }) {
     getTextData();
   }, [getTextData]);
 
+  useEffect(() => {
+    getImages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <AppContext.Provider
       value={{
@@ -113,6 +167,7 @@ function ContextProvider({ children }) {
         images,
         addImage,
         removeImage,
+        isImageLoading,
         selectedComponent,
         setSelectedComponent,
         messages,

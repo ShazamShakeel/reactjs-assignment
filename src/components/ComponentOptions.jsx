@@ -123,7 +123,8 @@ function DataContentOptions() {
 }
 
 function ImageContentOptions() {
-  const { addImage, removeImage } = useContext(AppContext);
+  const { images, isImageLoading, addImage, removeImage } =
+    useContext(AppContext);
   const imageRef = useRef(null);
 
   return (
@@ -133,10 +134,15 @@ function ImageContentOptions() {
         onClick={() => {
           imageRef.current.click();
         }}
+        disabled={images.length >= 4 || isImageLoading}
       >
         Add Image
       </Button>
-      <Button variant="outline-secondary" onClick={() => removeImage()}>
+      <Button
+        variant="outline-secondary"
+        onClick={() => removeImage()}
+        disabled={images.length <= 0 || isImageLoading}
+      >
         Remove Image
       </Button>
       <input
