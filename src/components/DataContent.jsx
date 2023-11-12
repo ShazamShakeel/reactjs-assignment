@@ -5,14 +5,14 @@ import { AppContext } from "../context/ContextProvider";
 
 function DataContent() {
   const {
+    fontColor,
+    fontSize,
     textData,
-    isEditText,
     editedText,
+    isEditText,
     setEditedText,
     isDnDDisabled,
     setSelectedComponent,
-    fontColor,
-    fontSize,
   } = useContext(AppContext);
 
   const { attributes, listeners, setNodeRef, transform, transition } =

@@ -14,26 +14,89 @@ import { v4 } from "uuid";
 export const AppContext = createContext();
 
 function ContextProvider({ children }) {
+  // UI States
   const [isDnDDisabled, setIsDnDDisabled] = useState(false);
-  const [images, setImages] = useState([]);
-  const [isImageLoading, setIsImageLoading] = useState(true);
-  const [textData, setTextData] = useState({
-    id: "",
-    heading: "",
-    paragraph: "",
-  });
+  const [selectedComponent, setSelectedComponent] = useState(null);
+  // Data States
+  const [fontSize, setFontSize] = useState(16);
+  const [fontColor, setFontColor] = useState("#000000");
   const [isEditText, setIsEditText] = useState(false);
   const [editedText, setEditedText] = useState({
     heading: "",
     paragraph: "",
   });
-  const [fontSize, setFontSize] = useState(16);
-  const [fontColor, setFontColor] = useState("#000000");
-  const [selectedComponent, setSelectedComponent] = useState(null);
+  const [textData, setTextData] = useState({
+    id: "",
+    heading: "",
+    paragraph: "",
+  });
+  // Image States
+  const [isImageLoading, setIsImageLoading] = useState(true);
+  const [images, setImages] = useState([]);
+  // Chatbot States
   const [messages, setMessages] = useState([
     { id: 0, message: "Hi", sender: "bot" },
     { id: 1, message: "How are you?", sender: "bot" },
   ]);
+
+  // Text Functions
+
+  const handleIsEditText = (value) => {
+    setIsEditText(value);
+    if (!value) {
+      setEditedText({
+        heading: textData?.heading ?? "",
+        paragraph: textData?.paragraph ?? "",
+      });
+    }
+  };
+
+  const getTextData = useCallback(async () => {
+    try {
+      const textDataCollectionRef = collection(db, "textdata");
+      const data = await getDocs(textDataCollectionRef);
+      const filteredData = data.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id,
+      }));
+      setTextData(filteredData[0]);
+    } catch (err) {
+      console.error(err);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const updateTextData = useCallback(async () => {
+    try {
+      const document = doc(db, "textdata", textData?.id);
+      await updateDoc(document, {
+        heading: editedText?.heading,
+        paragraph: editedText?.paragraph,
+      });
+      setTextData({
+        ...textData,
+        heading: editedText?.heading,
+        paragraph: editedText?.paragraph,
+      });
+      handleIsEditText(false);
+    } catch (err) {
+      console.error(err);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editedText, textData]);
+
+  useEffect(() => {
+    setEditedText({
+      heading: textData?.heading ?? "",
+      paragraph: textData?.paragraph ?? "",
+    });
+  }, [textData]);
+
+  useEffect(() => {
+    getTextData();
+  }, [getTextData]);
+
+  // Image Functions
 
   const getImages = useCallback(async () => {
     try {
@@ -41,7 +104,6 @@ function ContextProvider({ children }) {
       const data = await listAll(ref(storage, "/"));
       const promises = data.items.map((item) => getDownloadURL(item));
       const urls = await Promise.all(promises);
-      console.log(urls);
       setImages(urls);
     } catch (err) {
       console.error(err);
@@ -91,6 +153,13 @@ function ContextProvider({ children }) {
     }
   }, [images]);
 
+  useEffect(() => {
+    getImages();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Chatbot Functions
+
   const addMessage = (message) => {
     if (message)
       setMessages([
@@ -99,90 +168,30 @@ function ContextProvider({ children }) {
       ]);
   };
 
-  const getTextData = useCallback(async () => {
-    try {
-      const textDataCollectionRef = collection(db, "textdata");
-      const data = await getDocs(textDataCollectionRef);
-      const filteredData = data.docs.map((doc) => ({
-        ...doc.data(),
-        id: doc.id,
-      }));
-      setTextData(filteredData[0]);
-    } catch (err) {
-      console.error(err);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const updateTextData = useCallback(async () => {
-    try {
-      const document = doc(db, "textdata", textData?.id);
-      await updateDoc(document, {
-        heading: editedText?.heading,
-        paragraph: editedText?.paragraph,
-      });
-      setTextData({
-        ...textData,
-        heading: editedText?.heading,
-        paragraph: editedText?.paragraph,
-      });
-      handleIsEditText(false);
-    } catch (err) {
-      console.error(err);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editedText, textData]);
-
-  const handleIsEditText = (value) => {
-    setIsEditText(value);
-    if (!value) {
-      setEditedText({
-        heading: textData?.heading ?? "",
-        paragraph: textData?.paragraph ?? "",
-      });
-    }
-  };
-
-  useEffect(() => {
-    setEditedText({
-      heading: textData?.heading ?? "",
-      paragraph: textData?.paragraph ?? "",
-    });
-  }, [textData]);
-
-  useEffect(() => {
-    getTextData();
-  }, [getTextData]);
-
-  useEffect(() => {
-    getImages();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return (
     <AppContext.Provider
       value={{
         isDnDDisabled,
         setIsDnDDisabled,
-        images,
-        addImage,
-        removeImage,
-        isImageLoading,
         selectedComponent,
         setSelectedComponent,
-        messages,
-        addMessage,
         fontColor,
         setFontColor,
-        textData,
         isEditText,
         setIsEditText,
         editedText,
         setEditedText,
         handleIsEditText,
-        updateTextData,
         fontSize,
         setFontSize,
+        textData,
+        updateTextData,
+        images,
+        addImage,
+        removeImage,
+        isImageLoading,
+        messages,
+        addMessage,
       }}
     >
       {children}

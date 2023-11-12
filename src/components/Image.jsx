@@ -50,9 +50,7 @@ function Image() {
           {images.map((image, index) => (
             <div className="flex-grow-1" key={index}>
               <img
-                src={
-                  typeof image === "string" ? image : URL.createObjectURL(image)
-                }
+                src={image}
                 className="object-fit-contain rounded p-1"
                 style={{
                   height: "auto",

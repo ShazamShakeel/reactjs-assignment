@@ -21,15 +21,16 @@ export default ComponentOptions;
 
 function DataContentOptions() {
   const {
-    isEditText,
-    handleIsEditText,
-    updateTextData,
     fontColor,
     setFontColor,
     fontSize,
     setFontSize,
+    isEditText,
+    handleIsEditText,
+    updateTextData,
   } = useContext(AppContext);
   const [showColorSelector, setShowColorSelector] = useState(false);
+
   const handleColorChange = (value) => {
     setFontColor(value?.hex);
   };
